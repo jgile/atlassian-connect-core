@@ -30,11 +30,10 @@ class JWTClientTest extends \AtlassianConnectCore\Tests\TestCase
         static::assertEquals($actual, $expected);
     }
 
-    /**
-     * @expectedException \GuzzleHttp\Exception\RequestException
-     */
     public function testSendRequestError()
     {
+        $this->expectException(\GuzzleHttp\Exception\RequestException::class);
+
         $client = $this->createClient([
             new \GuzzleHttp\Exception\RequestException(
                 'Error Communicating with Server',
@@ -106,7 +105,7 @@ class JWTClientTest extends \AtlassianConnectCore\Tests\TestCase
         ]);
 
         $file = \Illuminate\Http\UploadedFile::fake()
-            ->image('avatar.png');
+                                             ->image('avatar.png');
 
         $actual = $client->sendFile($file, '/rest/api/2/configuration');
 
@@ -225,11 +224,9 @@ class JWTClientTest extends \AtlassianConnectCore\Tests\TestCase
         static::assertEquals($actual, $items);
     }
 
-    /**
-     * @expectedException \Exception
-     */
     public function testPaginateWithUnknown()
     {
+        $this->expectException(\Exception::class);
         $tenant = $this->createTenant([
             'product_type' => 'undefined'
         ]);
@@ -308,8 +305,7 @@ class JWTClientTest extends \AtlassianConnectCore\Tests\TestCase
         array $responses = [],
         \AtlassianConnectCore\Models\Tenant $tenant = null,
         \AtlassianConnectCore\Pagination\Paginator $paginator = null
-    )
-    {
+    ) {
         $tenant = $tenant ?? $this->createTenant();
 
         $mock = new \GuzzleHttp\Handler\MockHandler($responses);

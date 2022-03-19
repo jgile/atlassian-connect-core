@@ -2,10 +2,69 @@
 
 namespace AtlassianConnectCore\Tests;
 
+use ArrayAccess;
+use AtlassianConnectCore\Facades\Descriptor;
+use AtlassianConnectCore\Models\Tenant;
+use AtlassianConnectCore\ServiceProvider;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Testing\Constraints\ArraySubset;
+use SebastianBergmann\RecursionContext\InvalidArgumentException;
+use Mockery;
 
 abstract class TestCase extends \Orchestra\Testbench\TestCase
 {
+    /**
+     * @codeCoverageIgnore
+     */
+    private static function createWarning(string $warning): void
+    {
+        foreach(debug_backtrace() as $step) {
+            if(isset($step['object']) && $step['object'] instanceof TestCase) {
+                assert($step['object'] instanceof TestCase);
+
+                $step['object']->addWarning($warning);
+
+                break;
+            }
+        }
+    }
+
+    /**
+     * Asserts that an array has a specified subset.
+     *
+     * @param array|ArrayAccess $subset
+     * @param array|ArrayAccess $array
+     *
+     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     *
+     * @codeCoverageIgnore
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/3494
+     */
+    public static function assertArraySubset($subset, $array, bool $checkForObjectIdentity = false, string $message = ''): void
+    {
+        if(!(is_array($subset) || $subset instanceof ArrayAccess)) {
+            throw new InvalidArgumentException(
+                1,
+                'array or ArrayAccess'
+            );
+        }
+
+        if(!(is_array($array) || $array instanceof ArrayAccess)) {
+            throw new InvalidArgumentException(
+                2,
+                'array or ArrayAccess'
+            );
+        }
+
+        $constraint = new ArraySubset($subset, $checkForObjectIdentity);
+
+        static::assertThat($array, $constraint, $message);
+    }
+
     /**
      * @inheritdoc
      */
@@ -21,7 +80,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected function tearDown(): void
     {
-        \Mockery::close();
+        Mockery::close();
 
         parent::tearDown();
     }
@@ -29,34 +88,36 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
     /**
      * Get package providers.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param \Illuminate\Foundation\Application $app
+     *
      * @return array
      */
     protected function getPackageProviders($app)
     {
         return [
-            \AtlassianConnectCore\ServiceProvider::class
+            ServiceProvider::class
         ];
     }
 
     /**
      * Load package alias
      *
-     * @param  \Illuminate\Foundation\Application $app
+     * @param \Illuminate\Foundation\Application $app
      *
      * @return array
      */
     protected function getPackageAliases($app)
     {
         return [
-            'Descriptor' => \AtlassianConnectCore\Facades\Descriptor::class,
+            'Descriptor' => Descriptor::class,
         ];
     }
 
     /**
      * Define environment setup.
      *
-     * @param  \Illuminate\Foundation\Application    $app
+     * @param \Illuminate\Foundation\Application $app
+     *
      * @return void
      */
     protected function getEnvironmentSetUp($app)
@@ -65,12 +126,12 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
 
         $app['config']->set('database.default', 'testbench');
         $app['config']->set('database.connections.testbench', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => ''
+            'prefix' => ''
         ]);
 
-        $app['config']->set('auth.providers.users.model', \AtlassianConnectCore\ServiceProvider::class);
+        $app['config']->set('auth.providers.users.model', ServiceProvider::class);
         $app['config']->set('auth.guards.web.driver', 'jwt');
     }
 
@@ -79,10 +140,10 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected function migrate()
     {
-        if (app()->version() >= 5.4) {
+        if(app()->version() >= 5.4) {
             $migrator = app('migrator');
 
-            if (!$migrator->repositoryExists()) {
+            if(!$migrator->repositoryExists()) {
                 $this->artisan('migrate:install');
             }
 
@@ -102,7 +163,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected function createTenant(array $attributes = [], $save = true)
     {
-        $tenant = new \AtlassianConnectCore\Models\Tenant();
+        $tenant = new Tenant();
         $tenant->fill(array_merge($this->tenantData(), $attributes));
 
         if($save) {
@@ -122,20 +183,20 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected function createTenantRequest(array $merge = [], $requestClass = null)
     {
-        $class = ($requestClass === null ? \Illuminate\Http\Request::class : $requestClass);
+        $class = ($requestClass === null ? Request::class : $requestClass);
 
         return new $class(array_merge([
-            'key'            => $this->tenantData('addon_key'),
-            'clientKey'      => $this->tenantData('client_key'),
-            'publicKey'      => $this->tenantData('public_key'),
-            'sharedSecret'   => $this->tenantData('shared_secret'),
-            'serverVersion'  => $this->tenantData('server_version'),
+            'key' => $this->tenantData('addon_key'),
+            'clientKey' => $this->tenantData('client_key'),
+            'publicKey' => $this->tenantData('public_key'),
+            'sharedSecret' => $this->tenantData('shared_secret'),
+            'serverVersion' => $this->tenantData('server_version'),
             'pluginsVersion' => $this->tenantData('plugin_version'),
-            'baseUrl'        => $this->tenantData('base_url'),
-            'productType'    => $this->tenantData('product_type'),
-            'description'    => $this->tenantData('description'),
-            'eventType'      => $this->tenantData('event_type'),
-            'oauthClientId'  => $this->tenantData('oauth_client_token'),
+            'baseUrl' => $this->tenantData('base_url'),
+            'productType' => $this->tenantData('product_type'),
+            'description' => $this->tenantData('description'),
+            'eventType' => $this->tenantData('event_type'),
+            'oauthClientId' => $this->tenantData('oauth_client_token'),
         ], $merge));
     }
 

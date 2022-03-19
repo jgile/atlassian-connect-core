@@ -7,11 +7,9 @@ use Illuminate\Support\Arr;
 
 class PaginatorTest extends \AtlassianConnectCore\Tests\TestCase
 {
-    /**
-     * @expectedException \AtlassianConnectCore\Exceptions\PaginationException
-     */
     public function testValidateConfigWithoutClient()
     {
+        $this->expectException(\AtlassianConnectCore\Exceptions\PaginationException::class);
         $paginator = $this->createPaginator([
             'type' => Paginator::TYPE_PAGE,
             'url' => '/',
@@ -21,11 +19,9 @@ class PaginatorTest extends \AtlassianConnectCore\Tests\TestCase
         iterator_to_array($paginator);
     }
 
-    /**
-     * @expectedException \AtlassianConnectCore\Exceptions\PaginationException
-     */
     public function testValidateConfigWithoutURL()
     {
+        $this->expectException(\AtlassianConnectCore\Exceptions\PaginationException::class);
         $paginator = $this->createPaginator([
             'type' => Paginator::TYPE_PAGE,
             'url' => null
@@ -34,11 +30,9 @@ class PaginatorTest extends \AtlassianConnectCore\Tests\TestCase
         iterator_to_array($paginator);
     }
 
-    /**
-     * @expectedException \AtlassianConnectCore\Exceptions\PaginationException
-     */
     public function testValidateConfigWithInvalidType()
     {
+        $this->expectException(\AtlassianConnectCore\Exceptions\PaginationException::class);
         $paginator = $this->createPaginator([
             'type' => 192,
             'url' => null

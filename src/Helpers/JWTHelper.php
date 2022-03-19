@@ -52,7 +52,7 @@ class JWTHelper
             'qsh' => static::qsh($url, $method)
         ];
 
-        return \Firebase\JWT\JWT::encode($payload, $secret);
+        return \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
     }
 
     /**
@@ -82,23 +82,22 @@ class JWTHelper
     public static function authTokenMiddleware(string $issuer, string $secret)
     {
         return \GuzzleHttp\Middleware::mapRequest(
-            function (\Psr\Http\Message\RequestInterface $request)
-            use ($issuer, $secret)
-        {
-            // Generate token
-            $token = static::create(
-                (string) $request->getUri(),
-                $request->getMethod(),
-                $issuer,
-                $secret
-            );
+            function(\Psr\Http\Message\RequestInterface $request)
+            use ($issuer, $secret) {
+                // Generate token
+                $token = static::create(
+                    (string)$request->getUri(),
+                    $request->getMethod(),
+                    $issuer,
+                    $secret
+                );
 
-            return new \GuzzleHttp\Psr7\Request(
-                $request->getMethod(),
-                $request->getUri(),
-                array_merge($request->getHeaders(), ['Authorization' => 'JWT ' . $token]),
-                $request->getBody()
-            );
-        });
+                return new \GuzzleHttp\Psr7\Request(
+                    $request->getMethod(),
+                    $request->getUri(),
+                    array_merge($request->getHeaders(), ['Authorization' => 'JWT ' . $token]),
+                    $request->getBody()
+                );
+            });
     }
 }
